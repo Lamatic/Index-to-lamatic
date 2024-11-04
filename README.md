@@ -12,7 +12,7 @@ This GitHub Action detects changes to specified file types in your repository an
 
 ### Prerequisites
 
-1. **Webhook URL** and **Webhook Key**: Obtain the URL and authorization key for the webhook endpoint.
+1. **Webhook URL** and **Webhook Key**: Obtain the webhook URL from lamatic Flow, read [this doc](https://lamatic.ai/docs/interface/webhooks) on how to build a flow with webhooks as a trigger or use this [template](https://hub.lamatic.ai/templates/index-from-github) . 
 2. **GitHub Secrets**: Store sensitive data such as `WEBHOOK_URL` and `WEBHOOK_KEY` in your repository secrets.
 
 ### Workflow Example
@@ -35,7 +35,7 @@ jobs:
     
     steps:
     - name: Send File Changes to Webhook
-      uses: Lamatic/Index-to-lamatic@v1  # Uses action
+      uses: Lamatic/Index-to-lamatic@v1.2  # Uses action
       with:
         webhook_url: ${{ secrets.WEBHOOK_URL }}  # Replace with your secret
         webhook_key: ${{ secrets.WEBHOOK_KEY }}   # Replace with your secret
@@ -62,7 +62,7 @@ jobs:
 To use a specific version, reference it in your workflow like so:
 
 ```yaml
-- uses: Lamatic/Index-to-lamatic@v1
+- uses: Lamatic/Index-to-lamatic@v1.2
 ```
 
 ## Changelog
