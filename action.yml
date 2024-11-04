@@ -1,6 +1,9 @@
 name: "Send File Changes to Lamatic Webhook"
 description: "Sends new or modified files to a specified webhook URL."
 author: "Lamatic.ai"
+branding:
+  icon: 'zap'  
+  color: 'red'
 
 inputs:
   webhook_url:
