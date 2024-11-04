@@ -35,7 +35,7 @@ jobs:
     
     steps:
     - name: Send File Changes to Webhook
-      uses: Lamatic/Index-to-lamatic@latest  # Reference to the local custom action
+      uses: Lamatic/Index-to-lamatic@v1  # Uses action
       with:
         webhook_url: ${{ secrets.WEBHOOK_URL }}  # Replace with your secret
         webhook_key: ${{ secrets.WEBHOOK_KEY }}   # Replace with your secret
@@ -62,7 +62,7 @@ jobs:
 To use a specific version, reference it in your workflow like so:
 
 ```yaml
-- uses: Lamatic/Index-to-lamatic@v1.0.0
+- uses: Lamatic/Index-to-lamatic@v1
 ```
 
 ## Changelog
