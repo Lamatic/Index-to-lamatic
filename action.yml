@@ -18,6 +18,10 @@ inputs:
   file_type:
     description: "The type of file to check and send (e.g., mdx, json)."
     required: true
+  mode:
+    description: "The mode to operate in: 'full-refresh' to send all files, or 'incremental' to send only new/modified files after the first run."
+    required: true
+    default: "incremental"
 
 runs:
   using: "composite"
@@ -25,17 +29,13 @@ runs:
     - name: Make entrypoint.sh executable
       run: sudo chmod +x ${{ github.action_path }}/send_changes.sh
       shell: bash
-      
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 2  # Fetch the last 2 commits to compare changes
 
-    - name: Run Send Changes Script
-      shell: bash
+    - name: Call webhook
       run: ${{ github.action_path }}/send_changes.sh
+      shell: bash
       env:
         WEBHOOK_URL: ${{ inputs.webhook_url }}
         WEBHOOK_KEY: ${{ inputs.webhook_key }}
         GITHUB_REF: ${{ inputs.github_ref }}
         FILE_TYPE: ${{ inputs.file_type }}
+        MODE: ${{ inputs.mode }}
