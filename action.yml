@@ -1,0 +1,34 @@
+name: "Send File Changes to Lamatic Webhook"
+description: "Sends new or modified files to a specified webhook URL."
+author: "Lamatic.ai"
+
+inputs:
+  webhook_url:
+    description: "The URL of the webhook to send data to."
+    required: true
+  webhook_key:
+    description: "The authentication key for the webhook."
+    required: true
+  github_ref:
+    description: "The GitHub reference (branch) to work with."
+    required: true
+  file_type:
+    description: "The type of file to check and send (e.g., mdx, json)."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2  # Fetch the last 2 commits to compare changes
+
+    - name: Run Send Changes Script
+      shell: bash
+      run: ./send_changes.sh
+      env:
+        WEBHOOK_URL: ${{ inputs.webhook_url }}
+        WEBHOOK_KEY: ${{ inputs.webhook_key }}
+        GITHUB_REF: ${{ inputs.github_ref }}
+        FILE_TYPE: ${{ inputs.file_type }}
