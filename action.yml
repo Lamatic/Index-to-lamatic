@@ -22,6 +22,10 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Make entrypoint.sh executable
+      run: sudo chmod +x ${{ github.action_path }}/send_changes.sh
+      shell: bash
+      
     - name: Checkout Repository
       uses: actions/checkout@v3
       with:
@@ -29,7 +33,7 @@ runs:
 
     - name: Run Send Changes Script
       shell: bash
-      run: ./send_changes.sh
+      run: ${{ github.action_path }}/send_changes.sh
       env:
         WEBHOOK_URL: ${{ inputs.webhook_url }}
         WEBHOOK_KEY: ${{ inputs.webhook_key }}
