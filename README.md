@@ -35,12 +35,14 @@ jobs:
     
     steps:
     - name: Send File Changes to Webhook
-      uses: Lamatic/Index-to-lamatic@v1.2  # Uses action
+      uses: Lamatic/Index-to-lamatic@v1.6  # Uses action
       with:
         webhook_url: ${{ secrets.WEBHOOK_URL }}  # Replace with your secret
         webhook_key: ${{ secrets.WEBHOOK_KEY }}   # Replace with your secret
         github_ref: ${{ github.ref }}
         file_type: "mdx"  # Adjust the file type as needed
+        mode: "incremental"  # or "full-refresh"
+        verbose: "true"  # or "false"
 ```
 
 ### Inputs
@@ -51,6 +53,8 @@ jobs:
 | `webhook_key` | The authorization key for the webhook                | Yes      | `your_webhook_key`           |
 | `github_ref`  | The GitHub reference (branch) to work with           | Yes      | `refs/heads/main`            |
 | `file_type`   | The file extension to detect and send (e.g., `mdx`)  | Yes      | `mdx`                        |
+| `mode`        | The mode to operate in: `full-refresh` to send all files, or `incremental` to send only new/modified from the last commit.  | Yes      | `incremental` or `full-refresh ` |    
+| `verbose`     | Enable verbose output (true or false). Default -  False | No      | `True`                      |
 
 ### Example Scenarios
 
@@ -62,12 +66,12 @@ jobs:
 To use a specific version, reference it in your workflow like so:
 
 ```yaml
-- uses: Lamatic/Index-to-lamatic@v1.2
+- uses: Lamatic/Index-to-lamatic@v1.6
 ```
 
 ## Changelog
 
-### v1.0.0
+### v1.6.0
 
 - Initial release of `Webhook Action Lamatic Index Flow`.
 - Supports monitoring and sending changes for specified file types.
