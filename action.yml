@@ -22,15 +22,19 @@ inputs:
     description: "The mode to operate in: 'full-refresh' to send all files, or 'incremental' to send only new/modified files after the first run."
     required: true
     default: "incremental"
+  verbose:
+    description: "Enable verbose output (true or false)."
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
   steps:
-    - name: Make entrypoint.sh executable
+    - name: Make send_changes.sh executable
       run: sudo chmod +x ${{ github.action_path }}/send_changes.sh
       shell: bash
 
-    - name: Call webhook
+    - name: Run send_changes.sh
       run: ${{ github.action_path }}/send_changes.sh
       shell: bash
       env:
@@ -39,3 +43,4 @@ runs:
         GITHUB_REF: ${{ inputs.github_ref }}
         FILE_TYPE: ${{ inputs.file_type }}
         MODE: ${{ inputs.mode }}
+        VERBOSE: ${{ inputs.verbose }}
