@@ -24,32 +24,34 @@ if [ -z "$MODE" ]; then
   exit 1
 fi
 
-# Fetch all history for the branch
-git fetch --depth=2 origin $GITHUB_REF:refs/remotes/origin/$GITHUB_REF
+# Fetch all history for the branch to detect changes
+git fetch --depth=2 origin "$GITHUB_REF:refs/remotes/origin/$GITHUB_REF"
 
-# Cache file to track processed files for incremental mode
+# Cache file to track previously processed files
 cache_file=".file_cache_$FILE_TYPE.txt"
 
-# Get the list of files to process based on mode
+# Determine which files to send based on the selected mode
 if [ "$MODE" = "full-refresh" ]; then
-  # Full refresh mode: always process all files
+  # Full refresh mode: process all files every time
   files_to_send=$(find . -type f -name "*.$FILE_TYPE")
 
 elif [ "$MODE" = "incremental" ]; then
   if [ ! -f "$cache_file" ]; then
-    # First run of incremental mode: send all files and create cache
+    # First run of incremental mode: send all files and create the cache
     files_to_send=$(find . -type f -name "*.$FILE_TYPE")
-    echo "$files_to_send" > "$cache_file"
+    echo "$files_to_send" > "$cache_file"  # Save initial set of files to cache
   else
-    # Subsequent runs of incremental mode: send only changed files
+    # Subsequent runs of incremental mode: detect new or modified files
     changed_files=$(git diff --name-only HEAD^ HEAD | grep "\.$FILE_TYPE$" || true)
-    
+
     if [ -n "$changed_files" ]; then
-      # Add changed files to send list
+      # Only send files that have changed since the last commit
       files_to_send="$changed_files"
-      # Update the cache with new/modified files only
+      
+      # Update cache with the new/modified files only
       printf "%s\n" "$changed_files" >> "$cache_file"
-      # Remove duplicates in cache
+      
+      # Sort and remove duplicates in the cache file
       sort -u -o "$cache_file" "$cache_file"
     else
       echo "No new or modified .$FILE_TYPE files to send."
