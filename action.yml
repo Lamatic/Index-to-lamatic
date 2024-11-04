@@ -30,10 +30,15 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2  # Fetch the last 2 commits to compare changes
+        
     - name: Make send_changes.sh executable
       run: sudo chmod +x ${{ github.action_path }}/send_changes.sh
       shell: bash
-
+        
     - name: Run send_changes.sh
       run: ${{ github.action_path }}/send_changes.sh
       shell: bash
