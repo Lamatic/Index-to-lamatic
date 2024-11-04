@@ -1,49 +1,65 @@
 #!/bin/bash
 
-# Exit if any command fails and enable debugging
+# Enable verbose output if VERBOSE is true
+if [ "$VERBOSE" = "true" ]; then
+  set -x  # Enable debugging
+fi
+
+# Exit if any command fails
 set -e
-set -x
 
 echo "Webhook URL: $WEBHOOK_URL"
 echo "File Type: $FILE_TYPE"
+echo "Mode: $MODE"
+echo "Verbose Mode: $VERBOSE"
 
-# Ensure FILE_TYPE is set
+# Ensure FILE_TYPE and MODE are set
 if [ -z "$FILE_TYPE" ]; then
   echo "FILE_TYPE variable is not set. Please provide a file extension (e.g., 'mdx', 'json')."
+  exit 1
+fi
+
+if [ -z "$MODE" ]; then
+  echo "MODE variable is not set. Please provide a mode: 'full-refresh' or 'incremental'."
   exit 1
 fi
 
 # Fetch all history for the branch
 git fetch --depth=2 origin $GITHUB_REF:refs/remotes/origin/$GITHUB_REF
 
-# Create or update cache index file
+# Cache file to track processed files for incremental mode
 cache_file=".file_cache_$FILE_TYPE.txt"
-if [ ! -f "$cache_file" ]; then
-  # First run: index all files with the specified extension and send all of them
-  find . -type f -name "*.$FILE_TYPE" > "$cache_file"
-  all_files=$(cat "$cache_file")
+
+# Get the list of files to process based on mode
+if [ "$MODE" = "full-refresh" ]; then
+  # Full refresh mode: always process all files
+  files_to_send=$(find . -type f -name "*.$FILE_TYPE")
+
+elif [ "$MODE" = "incremental" ]; then
+  if [ ! -f "$cache_file" ]; then
+    # First run of incremental mode: send all files and create cache
+    files_to_send=$(find . -type f -name "*.$FILE_TYPE")
+    echo "$files_to_send" > "$cache_file"
+  else
+    # Subsequent runs of incremental mode: send only changed files
+    changed_files=$(git diff --name-only HEAD^ HEAD | grep "\.$FILE_TYPE$" || true)
+    
+    if [ -n "$changed_files" ]; then
+      # Add changed files to send list
+      files_to_send="$changed_files"
+      # Update the cache with new/modified files only
+      printf "%s\n" "$changed_files" >> "$cache_file"
+      # Remove duplicates in cache
+      sort -u -o "$cache_file" "$cache_file"
+    else
+      echo "No new or modified .$FILE_TYPE files to send."
+      exit 0
+    fi
+  fi
 else
-  # Not the first run: identify new or modified files
-  all_files=$(find . -type f -name "*.$FILE_TYPE")
-  changed_files=$(git diff --name-only HEAD^ HEAD | grep "\.$FILE_TYPE$" || true)
+  echo "Invalid MODE: $MODE. Valid options are 'full-refresh' or 'incremental'."
+  exit 1
 fi
-
-# Check if there are any new or modified files to send
-if [ -z "$changed_files" ] && [ -z "$all_files" ]; then
-  echo "No new or modified .$FILE_TYPE files to send."
-  exit 0
-fi
-
-# Update cache to include any newly added files
-if [ -n "$changed_files" ]; then
-  # Merge new/modified files with the cache
-  printf "%s\n" "$changed_files" >> "$cache_file"
-  # Remove duplicates in cache file
-  sort -u -o "$cache_file" "$cache_file"
-fi
-
-# Choose files to send: first run sends all, subsequent runs send only changed files
-files_to_send=${changed_files:-$all_files}
 
 # Iterate over each file and send its content to the webhook
 for file in $files_to_send; do
@@ -76,3 +92,8 @@ for file in $files_to_send; do
     echo "Response body: $body"
   fi
 done
+
+# Disable verbose output if it was enabled
+if [ "$VERBOSE" = "true" ]; then
+  set +x
+fi
